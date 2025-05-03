@@ -9,4 +9,12 @@ public class Doctor extends User{
     public void showDashboard() {
         System.out.println("Doctor panel opens...");
     }
+
+    public String getSpecialization() {
+        return specialization;
+    }
+
+    public void setSpecialization(String specialization) {
+        this.specialization = specialization;
+    }
 }
