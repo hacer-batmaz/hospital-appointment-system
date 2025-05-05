@@ -1,6 +1,7 @@
 public class Main {
     public static void main(String[] args) {
-        /*Admin admin = new Admin();
+        /*
+        Admin admin = new Admin();
 
         Doctor newDoctor = new Doctor(123001,"Ahmet Taş","ahmetdoctorx","Kalp Hastalıkları");
 
@@ -10,6 +11,9 @@ public class Main {
             System.out.println("Doktor başarıyla eklendi!");
         } else {
             System.out.println("Doktor eklenirken bir hata oluştu!");
-        }*/
+        }
+
+        admin.deleteDoctorInteractive();
+        */
     }
 }

@@ -1,9 +1,13 @@
+import javax.print.Doc;
 import javax.swing.*;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.Scanner;
 
 public class Admin extends User{
+    Scanner sc = new Scanner(System.in);
     public Admin() {
         super();
     }
@@ -91,6 +95,114 @@ public class Admin extends User{
             } catch (SQLException e) {
                 System.err.println("Error closing resources: " + e.getMessage());
             }
+        }
+    }
+
+    private boolean deleteDoctor(int doctorId) {
+        Connection conn = null;
+        PreparedStatement deleteDoctorPstmt = null;
+        PreparedStatement deleteUserPstmt = null;
+
+        try {
+            conn = DBConnection.connect(); // Veritabanı bağlantısı açıldı
+            conn.setAutoCommit(false); // Auto-commit'i kapat
+
+            // Önce doctors tablosundan silme işlemi
+            String deleteDoctorSql = "DELETE FROM doctors WHERE id = ?";
+            deleteDoctorPstmt = conn.prepareStatement(deleteDoctorSql);
+            deleteDoctorPstmt.setInt(1, doctorId);
+
+            int doctorAffectedRows = deleteDoctorPstmt.executeUpdate();
+
+            if (doctorAffectedRows == 0) {
+                conn.rollback();
+                JOptionPane.showMessageDialog(null, "Doctor with ID " + doctorId + " not found!", "Error", JOptionPane.ERROR_MESSAGE);//bulunamadi
+                return false;
+            }
+
+            int adminChoice = JOptionPane.showConfirmDialog(null,"Doctor with ID " + doctorId + " has been deleted from doctors table.\n" +
+                    "Do you also want to delete from users table?", "Confirm User Deletion", JOptionPane.YES_NO_OPTION);
+
+            if (adminChoice == JOptionPane.YES_OPTION) {
+                String deleteUserSql = "DELETE FROM users WHERE id = ?";
+                deleteUserPstmt = conn.prepareStatement(deleteUserSql);
+                deleteUserPstmt.setInt(1, doctorId);
+
+                int userAffectedRows = deleteUserPstmt.executeUpdate();
+                if (userAffectedRows > 0) {
+                    conn.commit();
+                    JOptionPane.showMessageDialog(null,"Doctor with ID " + doctorId + " has been completely deleted from both tables!",
+                            "Succes", JOptionPane.INFORMATION_MESSAGE);
+                    return true;
+                } else {
+                    conn.rollback();
+                    JOptionPane.showMessageDialog(null,"Doctor was deleted from doctors table but could not be deleted from users table!",
+                            "Partial Succes",JOptionPane.WARNING_MESSAGE);
+                    return false;
+                }
+            } else {
+                conn.commit();
+                JOptionPane.showMessageDialog(null,"Doctor with ID " + doctorId + " has been deleted only from doctors table.",
+                        "Partial Deletion", JOptionPane.INFORMATION_MESSAGE);
+                return true;
+            }
+        } catch (SQLException e) {
+            try {
+                if (conn != null) conn.rollback();
+            } catch (SQLException ex) {
+                System.err.println("Rollback failed: " + ex.getMessage());
+            }
+
+            String errMesage = "An error occured while deleting the doctor:\n";
+            if (e.getMessage().contains("foreign key constraint fails")) {
+                errMesage += "This doctor cannot be deleted because they have related records in other tables.";
+            } else {
+                errMesage += e.getMessage();
+            }
+
+            JOptionPane.showMessageDialog(null,errMesage,"Error",JOptionPane.ERROR_MESSAGE);
+            return false;
+        } finally {
+            try {//kaynaklari kapat
+                if (deleteDoctorPstmt != null) deleteDoctorPstmt.close();
+                if (deleteUserPstmt != null) deleteUserPstmt.close();
+                if (conn != null) {
+                    try {
+                        conn.setAutoCommit(true);
+                    } catch (SQLException e) {
+                        System.err.println("Error resetting autocommit: " + e.getMessage());
+                    }
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                System.err.println("Error closing resources: " + e.getMessage());
+            }
+        }
+    }
+
+    public void deleteDoctorInteractive() {
+        String input = JOptionPane.showInputDialog(null,"Enter Doctor ID to delete: ", "Delete doctor",JOptionPane.QUESTION_MESSAGE);
+
+        if (input == null || input.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null,"Operation cancelled.","Info",JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        try {
+            int doctorId = Integer.parseInt(input);
+
+            int confirm = JOptionPane.showConfirmDialog(null,"Are you sure you want to delete doctor with ID " + doctorId + "?",
+                    "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                boolean success = deleteDoctor(doctorId);
+                if (!success)
+                    JOptionPane.showMessageDialog(null,"Deletion failed for doctor ID " + doctorId, "Error",JOptionPane.ERROR_MESSAGE);
+                else
+                    JOptionPane.showMessageDialog(null,"Deletion cancelled.", "Error",JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null,"Invalid ID format: Please enter a number.","Error",JOptionPane.ERROR_MESSAGE);
         }
     }
 }
