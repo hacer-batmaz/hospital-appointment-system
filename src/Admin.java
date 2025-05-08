@@ -1,13 +1,9 @@
-import javax.print.Doc;
 import javax.swing.*;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Scanner;
 
 public class Admin extends User{
-    Scanner sc = new Scanner(System.in);
     public Admin() {
         super();
     }
@@ -153,8 +149,8 @@ public class Admin extends User{
                 System.err.println("Rollback failed: " + ex.getMessage());
             }
 
-            String errMesage = "An error occured while deleting the doctor:\n";
-            if (e.getMessage().contains("foreign key constraint fails")) {
+            String errMesage = "An error occured while deleting the doctor:\n";//hata mesaji
+            if (e.getMessage().contains("foreign key constraint fails")) {//yabanci anahtar kisitlamasi hatasi
                 errMesage += "This doctor cannot be deleted because they have related records in other tables.";
             } else {
                 errMesage += e.getMessage();
