@@ -14,6 +14,9 @@ public class Main {
         }
 
         admin.deleteDoctorInteractive();
+
+        Appointment a = new Appointment();
+        a.showAppointment(6);
         */
     }
 }
