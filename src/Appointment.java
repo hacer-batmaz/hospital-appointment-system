@@ -30,21 +30,8 @@ public class Appointment {
     }
 
     public void showAppointment(int appointmentId) {
-        String sql = "SELECT " +
-                "a.appointment_id, " +
-                "a.appointment_date, " +
-                "a.appointment_start_time, " +
-                "a.appointment_end_time, " +
-                "a.appointment_status, " +
-                "a.doctor_name, " +
-                "a.patient_name, " +
-                "d.specialization, " +
-                "p.phone_number " +
-                "FROM appointments a " +
-                "LEFT JOIN doctors d ON d.id = (SELECT id FROM users WHERE user_name = a.doctor_name) " +
-                "LEFT JOIN patients p ON p.id = (SELECT id FROM users WHERE user_name = a.patient_name) " +
-                "WHERE a.appointment_id = ?";
-
+        String sql = "SELECT " + "a.id, " + "a.doctor_id, " + "a.patient_id, " + "a.appointment_date, " + "a.appointment_start_time, " + "a.appointment_end_time, " + "a.appointment_status, " +
+                "d.specialization, " + "p.phone_number " + "FROM appointments a " + "JOIN doctors d ON a.doctor_id = d.id " + "JOIN patients p ON a.patient_id = p.id " + "WHERE a.id = ?";
 
         try (Connection conn = DBConnection.connect();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -57,15 +44,16 @@ public class Appointment {
                 // Randevu bilgilerini birleştiriyoruz
                 StringBuilder message = new StringBuilder();
                 message.append("<html><b>Appointment Details:</b><br><br>");
-                message.append("<b>ID:</b> ").append(rs.getInt("appointment_id")).append("<br>");
+                message.append("<b>Appointment ID:</b> ").append(rs.getInt("id")).append("<br>");
+                message.append("<b>Status:</b> ").append(rs.getString("appointment_status")).append("<br>");
+                message.append("<b>Doctor ID:</b> ").append(rs.getInt("doctor_id")).append("<br>");
+                message.append("<b>Doctor Specialization:</b> ").append(rs.getString("specialization")).append("<br>");
+                message.append("<b>Patient ID:</b> ").append(rs.getInt("patient_id")).append("<br>");
+                message.append("<b>Patient Phone:</b> ").append(rs.getString("phone_number")).append("<br>");
                 message.append("<b>Date:</b> ").append(rs.getDate("appointment_date")).append("<br>");
                 message.append("<b>Start Time:</b> ").append(rs.getTime("appointment_start_time")).append("<br>");
                 message.append("<b>End Time:</b> ").append(rs.getTime("appointment_end_time")).append("<br>");
-                message.append("<b>Status:</b> ").append(rs.getString("appointment_status")).append("<br>");
-                message.append("<b>Doctor Name:</b> ").append(rs.getString("doctor_name")).append("<br>");
-                message.append("<b>Doctor Specialization:</b> ").append(rs.getString("specialization")).append("<br>");
-                message.append("<b>Patient Name:</b> ").append(rs.getString("patient_name")).append("<br>");
-                message.append("<b>Patient Phone:</b> ").append(rs.getString("phone_number")).append("<br>");
+
 
                 // HTML formatında mesaj kutusu gösteriyoruz
                 JOptionPane.showMessageDialog(null,
