@@ -17,6 +17,9 @@ public class Main {
 
         Appointment a = new Appointment();
         a.showAppointment(6);
+
+        Patient p = new Patient();
+        p.isStatusAvailable(1);
         */
     }
 }
