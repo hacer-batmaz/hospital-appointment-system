@@ -43,17 +43,19 @@ public class Appointment {
             if (rs.next()) {
                 // Randevu bilgilerini birleştiriyoruz
                 StringBuilder message = new StringBuilder();
-                message.append("<html><b>Appointment Details:</b><br><br>");
-                message.append("<b>Appointment ID:</b> ").append(rs.getInt("id")).append("<br>");
-                message.append("<b>Status:</b> ").append(rs.getString("appointment_status")).append("<br>");
-                message.append("<b>Doctor ID:</b> ").append(rs.getInt("doctor_id")).append("<br>");
-                message.append("<b>Doctor Specialization:</b> ").append(rs.getString("specialization")).append("<br>");
-                message.append("<b>Patient ID:</b> ").append(rs.getInt("patient_id")).append("<br>");
-                message.append("<b>Patient Phone:</b> ").append(rs.getString("phone_number")).append("<br>");
-                message.append("<b>Date:</b> ").append(rs.getDate("appointment_date")).append("<br>");
-                message.append("<b>Start Time:</b> ").append(rs.getTime("appointment_start_time")).append("<br>");
-                message.append("<b>End Time:</b> ").append(rs.getTime("appointment_end_time")).append("<br>");
-
+                message.append("<html>");
+                message.append("<h2>Appointment Details</h2>");
+                message.append("<table>");
+                message.append("<tr><td><b>Appointment ID:</b></td><td>").append(rs.getInt("id")).append("</td></tr>");
+                message.append("<tr><td><b>Status:</b></td><td>").append(rs.getString("appointment_status")).append("</td></tr>");
+                message.append("<tr><td><b>Doctor ID:</b></td><td>").append(rs.getInt("doctor_id")).append("</td></tr>");
+                message.append("<tr><td><b>Specialization:</b></td><td>").append(rs.getString("specialization")).append("</td></tr>");
+                message.append("<tr><td><b>Patient ID:</b></td><td>").append(rs.getInt("patient_id")).append("</td></tr>");
+                message.append("<tr><td><b>Patient Phone:</b></td><td>").append(rs.getString("phone_number")).append("</td></tr>");
+                message.append("<tr><td><b>Date:</b></td><td>").append(rs.getDate("appointment_date")).append("</td></tr>");
+                message.append("<tr><td><b>Start Time:</b></td><td>").append(rs.getTime("appointment_start_time")).append("</td></tr>");
+                message.append("<tr><td><b>End Time:</b></td><td>").append(rs.getTime("appointment_end_time")).append("</td></tr>");
+                message.append("</table></html>");
 
                 // HTML formatında mesaj kutusu gösteriyoruz
                 JOptionPane.showMessageDialog(null,
