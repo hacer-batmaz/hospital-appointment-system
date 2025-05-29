@@ -21,8 +21,9 @@ public class Main {
         Patient p = new Patient();
         p.isStatusAvailable(1);
 
+
+        */
         Doctor d = new Doctor();
         d.getAvailableAppointments(1);
-        */
     }
 }

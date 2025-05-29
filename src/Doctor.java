@@ -23,9 +23,8 @@ public class Doctor extends User{
         try {
             conn = DBConnection.connect();
             String sql = "SELECT a.id, a.appointment_date, a.appointment_start_time, " +
-                    "a.appointment_end_time, u.user_name as patient_name " +
+                    "a.appointment_end_time " +
                     "FROM appointments a " +
-                    "LEFT JOIN users u ON a.patient_id = u.id " +
                     "WHERE a.doctor_id = ? AND a.appointment_status = 'Available' " +
                     "ORDER BY a.appointment_date, a.appointment_start_time";
             stmt = conn.prepareStatement(sql);
@@ -35,7 +34,7 @@ public class Doctor extends User{
             StringBuilder message = new StringBuilder();
             message.append("<html><h2>Available Appointments</h2>");
             message.append("<table border='1' cellpadding='5'>");
-            message.append("<tr><th>ID</th><th>Date</th><th>Time Slot</th><th>Patient</th></tr>");
+            message.append("<tr><th>ID</th><th>Date</th><th>Time Slot</th>");
 
             boolean hasAppointments = false;//available yoksa diye
 
@@ -46,9 +45,6 @@ public class Doctor extends User{
                 message.append("<td>").append(rs.getDate("appointment_date")).append("</td>");
                 message.append("<td>").append(rs.getTime("appointment_start_time"))
                         .append(" - ").append(rs.getTime("appointment_end_time")).append("</td>");
-                message.append("<td>").append(rs.getString("patient_name") != null ?
-                        rs.getString("patient_name") : "Not assigned").append("</td>");
-                message.append("</tr>");
             }
             message.append("</table>");
 
