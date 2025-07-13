@@ -201,4 +201,52 @@ public class Admin extends User{
             JOptionPane.showMessageDialog(null,"Invalid ID format: Please enter a number.","Error",JOptionPane.ERROR_MESSAGE);
         }
     }
+
+    public void deleteAppointmentsByPatientName() {
+        String input = JOptionPane.showInputDialog(null, "Enter the ID of the patient whose appointment list you want to delete",
+                "delete patient appointment", JOptionPane.QUESTION_MESSAGE);
+
+        if (input == null || input.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Patient ID cannot be empty!" ,"Warning",JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        int patientId;
+        try {
+            patientId = Integer.parseInt(input.trim());
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Please enter a valid ID", "Warning", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        Connection conn = null;
+        PreparedStatement stmt = null;
+
+        try {
+            conn = DBConnection.connect();
+            String sql = "DELETE FROM appointments WHERE patient_id = ?";
+            stmt = conn.prepareStatement(sql);
+            stmt.setString(1, String.valueOf(patientId));
+
+            int affectedRows = stmt.executeUpdate();
+            if (affectedRows > 0) {
+                JOptionPane.showMessageDialog(null, "All appointments have been deleted successfully.",
+                        "Succsfuly", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "No patient with this name was found or there is no appointment to delete.",
+                        "Information", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "An error occurred while deleting appointments.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
