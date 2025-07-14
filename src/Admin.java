@@ -295,4 +295,49 @@ public class Admin extends User{
             }
         }
     }
+
+    public void listPatient() {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DBConnection.connect();
+            String sql = "SELECT u.user_name, p.phone_number FROM users u JOIN patients p ON u.id = p.id";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+
+            StringBuilder message = new StringBuilder();
+            message.append("<html><h2>Patients</h2>");
+            message.append("<table border='1' cellpadding='5'>");
+            message.append("<tr><th>Name</th><th>Phone Number</th>");
+
+            boolean hasPatients = false;
+
+            while (rs.next()) {
+                message.append("<tr>");
+                message.append("<td>").append(rs.getString("user_name")).append("</td>");
+                message.append("<td>").append(rs.getString("phone_number")).append("</td>");
+
+            }
+            message.append("</table>");
+
+            if (hasPatients) {
+                JOptionPane.showMessageDialog(null, "No patients found.", "Patients", JOptionPane.ERROR_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, message.toString(), "Patients", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "An error occurred while listing patients.", "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 }
