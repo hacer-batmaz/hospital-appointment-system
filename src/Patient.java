@@ -3,6 +3,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Patient extends User{
     private String phoneNumber;
@@ -210,6 +212,93 @@ public class Patient extends User{
             try {
                 if (rs != null) rs.close();
                 if (stmt != null) stmt.close();
+                if (conn != null) conn.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void bookAppointment() {
+        Connection conn = null;
+        PreparedStatement selectStmt = null;
+        PreparedStatement updateStmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = DBConnection.connect();
+            //hastaya uygun olan, yani 'Available' durumundaki randevulari listele
+            String sql = "SELECT a.id, u.user_name AS doctor_name, a.appointment_date, a.appointment_start_time, a.appointment_end_time " +
+                    "FROM appointments a " +
+                    "JOIN users u ON a.doctor_id = u.id " +
+                    "WHERE a.appointment_status = 'Available' " +
+                    "AND a.appointment_date >= CURDATE() " +
+                    "ORDER BY a.appointment_date, a.appointment_start_time";
+            selectStmt = conn.prepareStatement(sql);
+            rs = selectStmt.executeQuery();
+
+            Map<Integer, Integer> rowToAppointmentId = new HashMap<>();
+            StringBuilder message = new StringBuilder("<html><h2>Available Appointments</h2>");
+            message.append("<table border='1' cellpadding='5'>");
+            message.append("<tr><th>#</th><th>Doctor</th><th>Date</th><th>Start</th><th>End</th></tr>");
+
+            int count = 1;
+            while (rs.next()) {
+                int appointmentId = rs.getInt("id");
+                rowToAppointmentId.put(count, appointmentId);
+
+                message.append("<tr>");
+                message.append("<td>").append(count).append("</td>");
+                message.append("<td>").append(rs.getString("doctor_name")).append("</td>");
+                message.append("<td>").append(rs.getDate("appointment_date")).append("</td>");
+                message.append("<td>").append(rs.getTime("appointment_start_time")).append("</td>");
+                message.append("<td>").append(rs.getTime("appointment_end_time")).append("</td>");
+                message.append("</tr>");
+
+                count++;
+            }
+            message.append("</table></html>");
+
+            if (rowToAppointmentId.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "No suitable appointment found.", "Make an Appointment", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            //kullanicidan secim al
+            String input = JOptionPane.showInputDialog(null, message.toString() + "\nPlease enter the number of the appointment you wish to make:",
+                    "Make an Appointment", JOptionPane.INFORMATION_MESSAGE);
+            if (input == null) return; // İptal etti
+            int selectedRow = Integer.parseInt(input);
+
+            if (!rowToAppointmentId.containsKey(selectedRow)) {
+                JOptionPane.showMessageDialog(null, "Invalid selection.", "Make an Appointment", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            int selectedAppointmentId = rowToAppointmentId.get(selectedRow);
+
+            //randevuyu hastaya ata
+            String updateSql = "UPDATE appointments SET patient_id = ?, appointment_status = 'Approved' WHERE id = ? AND appointment_status = 'Available'";
+            updateStmt = conn.prepareStatement(updateSql);
+            updateStmt.setInt(1, this.getId());
+            updateStmt.setInt(2, selectedAppointmentId);
+
+            int updated = updateStmt.executeUpdate();
+
+            if (updated > 0) {
+                JOptionPane.showMessageDialog(null, "The appointment was made successfully.", "Make an Appointment", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(null, "Appointment not available. The appointment you selected is no longer available.",
+                        "Make an Appointment", JOptionPane.INFORMATION_MESSAGE);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "An error occurred while making an appointment. ", "Error", JOptionPane.ERROR_MESSAGE);
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (selectStmt != null) selectStmt.close();
+                if (updateStmt != null) updateStmt.close();
                 if (conn != null) conn.close();
             } catch (SQLException e) {
                 e.printStackTrace();
