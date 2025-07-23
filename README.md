@@ -32,8 +32,8 @@ MySQL – Relational database system
 
 ## Installation & Setup
 Requirements  
-• JDK 8 or above
-• MySQL Server
+• JDK 8 or above  
+• MySQL Server  
 • JDBC Driver (mysql-connector-java)
 
 Steps
