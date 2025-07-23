@@ -3,25 +3,25 @@
 This project is a desktop-based Hospital Appointment System developed using Java Swing and MySQL. It allows users (admin, doctor, and patient) to log in, access role-specific interfaces, and manage appointments accordingly.
 
 ## Features
-• Login System:
+• Login System:  
 Login available for Admin, Doctor, and Patient roles.
 
-• Role-Based Access:
+• Role-Based Access:  
 Admin: Manage users (add/delete/list doctors and patients).
 Doctor: View their own appointments, add comments (if applicable).
 Patient: Book and cancel appointments, view past and upcoming appointments.
 
-• Appointment Management:
+• Appointment Management:  
 View all available appointments
 Filter by past and future appointments
 Prevent scheduling conflicts through overlap control
 
-• User Interface:
+• User Interface:  
 Built with a user-friendly Java Swing GUI
 
-## Technologies Used
-Java – Core programming language
-Java Swing – Desktop GUI framework
+## Technologies Used  
+Java – Core programming language  
+Java Swing – Desktop GUI framework  
 MySQL – Relational database system
 
 ## Screenshots
@@ -31,7 +31,7 @@ MySQL – Relational database system
 
 
 ## Installation & Setup
-Requirements
+Requirements  
 • JDK 8 or above
 • MySQL Server
 • JDBC Driver (mysql-connector-java)
