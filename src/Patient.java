@@ -19,7 +19,63 @@ public class Patient extends User{
 
     @Override
     public void showDashboard() {
-        System.out.println("Patient panel opens...");
+        String[] options = {
+                "1. List Doctors",
+                "2. List Past Appointments",
+                "3. List Future Appointments",
+                "4. Make an Appointment"};
+
+        StringBuilder menu = new StringBuilder("Select the action you want to perform:\n");
+        for (String option : options) {
+            menu.append(option).append("\n");
+        }
+
+        String inputStr = JOptionPane.showInputDialog(null, menu.toString());
+        if (inputStr == null) {
+            JOptionPane.showMessageDialog(null, "Operation canceled by user.","Information",JOptionPane.INFORMATION_MESSAGE);
+            menu();
+            return;
+        }
+        if (!inputStr.matches("\\d+")) {
+            JOptionPane.showMessageDialog(null, "Only numbers are allowed!", "Error", JOptionPane.ERROR_MESSAGE);
+            showDashboard();
+            return;
+        }
+
+        try {
+            int input = Integer.parseInt(inputStr);
+            switch (input) {
+                case 1:
+                    listDoctor();
+                    menu();
+                    break;
+                case 2:
+                    listPastAppointments();
+                    menu();
+                    break;
+                case 3:
+                    listUpcomingAppointments();
+                    menu();
+                    break;
+                case 4:
+                    bookAppointment();
+                    break;
+                default:
+                    JOptionPane.showMessageDialog(null,"Please enter a number between 1 and 4.","Warning",JOptionPane.WARNING_MESSAGE);
+                    showDashboard();
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null,"Please enter a valid number.","Error",JOptionPane.ERROR_MESSAGE);
+            showDashboard();
+        }
+    }
+
+    private void menu() {
+        int choice = JOptionPane.showConfirmDialog(null, "Do you want to take another action?" ,"Next Action",JOptionPane.YES_NO_OPTION);
+        if (choice == JOptionPane.YES_OPTION)
+            showDashboard();
+        else
+            JOptionPane.showMessageDialog(null, "The transaction is complete. You have logged out.","Logout",JOptionPane.INFORMATION_MESSAGE);
     }
 
     public void listDoctor() {
@@ -126,14 +182,13 @@ public class Patient extends User{
             StringBuilder message = new StringBuilder();
             message.append("<html><h2>Upcoming Appointments</h2>");
             message.append("<table border='1' cellpadding='5'>");
-            message.append("<tr><th>ID</th><th>Date</th><th>Start</th><th>End</th><th>Doctor</th></tr>");
+            message.append("<tr><th>Date</th><th>Start</th><th>End</th><th>Doctor</th></tr>");
 
             boolean hasAppointments = false;
 
             while (rs.next()) {
                 hasAppointments = true;
                 message.append("<tr>");
-                message.append("<td>").append(rs.getInt("id")).append("</td>");
                 message.append("<td>").append(rs.getDate("appointment_date")).append("</td>");
                 message.append("<td>").append(rs.getTime("appointment_start_time")).append("</td>");
                 message.append("<td>").append(rs.getTime("appointment_end_time")).append("</td>");
@@ -183,14 +238,13 @@ public class Patient extends User{
             StringBuilder message = new StringBuilder();
             message.append("<html><h2>Past Appointments</h2>");
             message.append("<table border='1' cellpadding='5'>");
-            message.append("<tr><th>ID</th><th>Date</th><th>Start</th><th>End</th><th>Doctor</th></tr>");
+            message.append("<tr><th>Date</th><th>Start</th><th>End</th><th>Doctor</th></tr>");
 
             boolean hasAppointments = false;
 
             while (rs.next()) {
                 hasAppointments = true;
                 message.append("<tr>");
-                message.append("<td>").append(rs.getInt("id")).append("</td>");
                 message.append("<td>").append(rs.getDate("appointment_date")).append("</td>");
                 message.append("<td>").append(rs.getTime("appointment_start_time")).append("</td>");
                 message.append("<td>").append(rs.getTime("appointment_end_time")).append("</td>");

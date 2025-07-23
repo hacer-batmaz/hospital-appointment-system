@@ -15,12 +15,69 @@ public class Doctor extends User{
         this.specialization = specialization;
     }
 
-    public void getAvailableAppointments(int id) {
+    @Override
+    public void showDashboard() {
+        String[] options = {
+                "1. List Available Appointments",
+                "2. Listing Upcoming Appointments"};
+
+        StringBuilder menu = new StringBuilder("Select the action you want to perform:\n");
+        for (String option : options) {
+            menu.append(option).append("\n");
+        }
+
+        String inputStr = JOptionPane.showInputDialog(null, menu.toString());
+        if (inputStr == null) {
+            JOptionPane.showMessageDialog(null, "Operation canceled by user.","Information",JOptionPane.INFORMATION_MESSAGE);
+            menu();
+            return;
+        }
+        if (!inputStr.matches("\\d+")) {
+            JOptionPane.showMessageDialog(null, "Only numbers are allowed!", "Error", JOptionPane.ERROR_MESSAGE);
+            showDashboard();
+            return;
+        }
+
+        try {
+            int input = Integer.parseInt(inputStr);
+            switch (input) {
+                case 1:
+                    getAvailableAppointments();
+                    menu();
+                    break;
+                case 2:
+                    listUpcomingAppointments();
+                    menu();
+                    break;
+                default:
+                    JOptionPane.showMessageDialog(null,"Please enter 1 or 2.","Warning",JOptionPane.WARNING_MESSAGE);
+                    showDashboard();
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null,"Please enter a valid number.","Error",JOptionPane.ERROR_MESSAGE);
+            showDashboard();
+        }
+    }
+
+    private void menu() {
+        int choice = JOptionPane.showConfirmDialog(null, "Do you want to take another action?" ,"Next Action",JOptionPane.YES_NO_OPTION);
+        if (choice == JOptionPane.YES_OPTION)
+            showDashboard();
+        else
+            JOptionPane.showMessageDialog(null, "The transaction is complete. You have logged out.","Logout",JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void getAvailableAppointments() {
         Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
 
         try {
+            String input = JOptionPane.showInputDialog(null, "Enter the ID of the doctor to list available appointments:",
+                    "Doctor ID Input", JOptionPane.QUESTION_MESSAGE);
+            if (input == null) return;
+            int id = Integer.parseInt(input);
+
             conn = DBConnection.connect();
             String sql = "SELECT a.id, a.appointment_date, a.appointment_start_time, " +
                     "a.appointment_end_time " +
@@ -53,6 +110,8 @@ public class Doctor extends User{
             }
             JOptionPane.showMessageDialog(null, message.toString(), "Available Appointments for Doctor ID: " + id,
                     JOptionPane.INFORMATION_MESSAGE);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Invalid input! Please enter a numeric ID.", "Input Error", JOptionPane.ERROR_MESSAGE);
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null,
@@ -124,11 +183,6 @@ public class Doctor extends User{
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public void showDashboard() {
-        System.out.println("Doctor panel opens...");
     }
 
     public String getSpecialization() {

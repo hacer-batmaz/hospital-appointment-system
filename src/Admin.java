@@ -15,15 +15,90 @@ public class Admin extends User{
 
     @Override
     public void showDashboard() {
-        System.out.println("Admin panel opens...");
+        String[] options = {
+                "1. List Doctors",
+                "2. List Patients",
+                "3. Add Doctors",
+                "4. Delete Doctors",
+                "5. Delete Appointment"};
+
+        StringBuilder menu = new StringBuilder("Select the action you want to perform:\n");
+        for (String option : options) {
+            menu.append(option).append("\n");
+        }
+
+        String inputStr = JOptionPane.showInputDialog(null, menu.toString());
+        if (inputStr == null) {
+            JOptionPane.showMessageDialog(null, "Operation canceled by user.","Information",JOptionPane.INFORMATION_MESSAGE);
+            menu();
+            return;
+        }
+        if (!inputStr.matches("\\d+")) {
+            JOptionPane.showMessageDialog(null, "Only numbers are allowed!", "Error", JOptionPane.ERROR_MESSAGE);
+            showDashboard();
+            return;
+        }
+
+        try {
+            int input = Integer.parseInt(inputStr);
+            switch (input) {
+                case 1:
+                    listDoctor();
+                    menu();
+                    break;
+                case 2:
+                    listPatient();
+                    menu();
+                    break;
+                case 3:
+                    addDoctor();
+                    menu();
+                    break;
+                case 4:
+                    deleteDoctorWithPrompt();
+                    menu();
+                    break;
+                case 5:
+                    deleteAppointmentsByPatientName();
+                    menu();
+                    break;
+                default:
+                    JOptionPane.showMessageDialog(null,"Please enter a number between 1 and 5.","Warning",JOptionPane.WARNING_MESSAGE);
+                    showDashboard();
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null,"Please enter a valid number.","Error",JOptionPane.ERROR_MESSAGE);
+            showDashboard();
+        }
     }
 
-    public boolean addDoctor(Doctor doctor) {
+    private void menu() {
+        int choice = JOptionPane.showConfirmDialog(null, "Do you want to take another action?" ,"Next Action",JOptionPane.YES_NO_OPTION);
+        if (choice == JOptionPane.YES_OPTION)
+            showDashboard();
+        else
+            JOptionPane.showMessageDialog(null, "The transaction is complete. You have logged out.","Logout",JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public boolean addDoctor() {
         Connection conn = null;
         PreparedStatement userPstmt = null;
         PreparedStatement doctorPstmt = null;
 
         try {
+            String idInput = JOptionPane.showInputDialog(null, "Enter Doctor ID:", "Doctor ID", JOptionPane.QUESTION_MESSAGE);
+            if (idInput == null) return false;
+            int id = Integer.parseInt(idInput.trim());
+
+            String userName = JOptionPane.showInputDialog(null, "Enter Doctor Name:", "Doctor Name", JOptionPane.QUESTION_MESSAGE);
+            if (userName == null || userName.trim().isEmpty()) return false;
+
+            String password = JOptionPane.showInputDialog(null, "Enter Password:", "Password", JOptionPane.QUESTION_MESSAGE);
+            if (password == null || password.trim().isEmpty()) return false;
+
+            String specialization = JOptionPane.showInputDialog(null, "Enter Specialization:", "Specialization", JOptionPane.QUESTION_MESSAGE);
+            if (specialization == null || specialization.trim().isEmpty()) return false;
+
             conn = DBConnection.connect();//veritabani baglantisi acildi
             conn.setAutoCommit(false);//auto-commit i kapat
             String userSql = "INSERT INTO users (id, user_name , password) VALUES (?, ?, ?)";
@@ -31,9 +106,9 @@ public class Admin extends User{
             userPstmt = conn.prepareStatement(userSql);
 
             //PreparedStatement parametreleri ayarlandi
-            userPstmt.setInt(1, doctor.getId());
-            userPstmt.setString(2, doctor.getUserName());
-            userPstmt.setString(3, doctor.getPassword());
+            userPstmt.setInt(1, id);
+            userPstmt.setString(2, userName.trim());
+            userPstmt.setString(3, password.trim());
 
             int userAffectedRows = userPstmt.executeUpdate();//sorguyu calistir
 
@@ -45,8 +120,8 @@ public class Admin extends User{
 
             String doctorSql = "INSERT INTO doctors (id, specialization) VALUES (?, ?)";
             doctorPstmt = conn.prepareStatement(doctorSql);
-            doctorPstmt.setInt(1, doctor.getId());
-            doctorPstmt.setString(2, doctor.getSpecialization());
+            doctorPstmt.setInt(1, id);
+            doctorPstmt.setString(2, specialization.trim());
 
             int doctorAffectedRows = doctorPstmt.executeUpdate();
 
@@ -59,6 +134,9 @@ public class Admin extends User{
                 JOptionPane.showMessageDialog(null, "Doctor could not be added!", "Error", JOptionPane.ERROR_MESSAGE);
                 return false;
             }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(null, "Invalid ID input! Please enter a numeric value.", "Input Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         } catch (SQLException e) {
             try {
                 if (conn != null) conn.rollback(); // Hata durumunda transaction'ı geri al
@@ -95,30 +173,67 @@ public class Admin extends User{
         }
     }
 
-    private boolean deleteDoctor(int doctorId) {
+    public void deleteDoctorWithPrompt() {
         Connection conn = null;
+        PreparedStatement checkDoctorPstmt = null;
         PreparedStatement deleteDoctorPstmt = null;
         PreparedStatement deleteUserPstmt = null;
+        ResultSet rs = null;
+
+        String input = JOptionPane.showInputDialog(null, "Enter Doctor ID to delete: ", "Delete Doctor", JOptionPane.QUESTION_MESSAGE);
+        if (input == null || input.trim().isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Operation cancelled.", "Info", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        int doctorId;
+        try {
+            doctorId = Integer.parseInt(input);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(null, "Invalid ID format: Please enter a number.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
         try {
-            conn = DBConnection.connect(); // Veritabanı bağlantısı açıldı
-            conn.setAutoCommit(false); // Auto-commit'i kapat
+            conn = DBConnection.connect();
 
-            // Önce doctors tablosundan silme işlemi
+            String checkDoctorSql = "SELECT * FROM doctors WHERE id = ?";
+            checkDoctorPstmt = conn.prepareStatement(checkDoctorSql);
+            checkDoctorPstmt.setInt(1, doctorId);
+            rs = checkDoctorPstmt.executeQuery();
+
+            if (!rs.next()) {
+                JOptionPane.showMessageDialog(null, "Doctor with ID " + doctorId + " not found!", "Not Found", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            //sadece doktor varsa sorulacak
+            int confirm = JOptionPane.showConfirmDialog(null,
+                    "Are you sure you want to delete doctor with ID " + doctorId + "?",
+                    "Confirm Deletion", JOptionPane.YES_NO_OPTION);
+
+            if (confirm != JOptionPane.YES_OPTION) {
+                JOptionPane.showMessageDialog(null, "Operation cancelled.", "Info", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            conn.setAutoCommit(false);
+
             String deleteDoctorSql = "DELETE FROM doctors WHERE id = ?";
             deleteDoctorPstmt = conn.prepareStatement(deleteDoctorSql);
             deleteDoctorPstmt.setInt(1, doctorId);
 
             int doctorAffectedRows = deleteDoctorPstmt.executeUpdate();
-
             if (doctorAffectedRows == 0) {
-                conn.rollback();
-                JOptionPane.showMessageDialog(null, "Doctor with ID " + doctorId + " not found!", "Error", JOptionPane.ERROR_MESSAGE);//bulunamadi
-                return false;
+                conn.rollback(); //teorik olarak gerek yok ama güvenli
+                JOptionPane.showMessageDialog(null, "Doctor could not be deleted.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
             }
 
-            int adminChoice = JOptionPane.showConfirmDialog(null,"Doctor with ID " + doctorId + " has been deleted from doctors table.\n" +
-                    "Do you also want to delete from users table?", "Confirm User Deletion", JOptionPane.YES_NO_OPTION);
+            //users tablosundan da silinsin mi
+            int adminChoice = JOptionPane.showConfirmDialog(null,
+                    "Doctor with ID " + doctorId + " has been deleted from doctors table.\nDo you also want to delete from users table?",
+                    "Confirm User Deletion", JOptionPane.YES_NO_OPTION);
 
             if (adminChoice == JOptionPane.YES_OPTION) {
                 String deleteUserSql = "DELETE FROM users WHERE id = ?";
@@ -128,21 +243,22 @@ public class Admin extends User{
                 int userAffectedRows = deleteUserPstmt.executeUpdate();
                 if (userAffectedRows > 0) {
                     conn.commit();
-                    JOptionPane.showMessageDialog(null,"Doctor with ID " + doctorId + " has been completely deleted from both tables!",
-                            "Succes", JOptionPane.INFORMATION_MESSAGE);
-                    return true;
+                    JOptionPane.showMessageDialog(null,
+                            "Doctor with ID " + doctorId + " has been completely deleted from both tables!",
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     conn.rollback();
-                    JOptionPane.showMessageDialog(null,"Doctor was deleted from doctors table but could not be deleted from users table!",
-                            "Partial Succes",JOptionPane.WARNING_MESSAGE);
-                    return false;
+                    JOptionPane.showMessageDialog(null,
+                            "Doctor was deleted from doctors table but could not be deleted from users table!",
+                            "Partial Success", JOptionPane.WARNING_MESSAGE);
                 }
             } else {
                 conn.commit();
-                JOptionPane.showMessageDialog(null,"Doctor with ID " + doctorId + " has been deleted only from doctors table.",
+                JOptionPane.showMessageDialog(null,
+                        "Doctor with ID " + doctorId + " has been deleted only from doctors table.",
                         "Partial Deletion", JOptionPane.INFORMATION_MESSAGE);
-                return true;
             }
+
         } catch (SQLException e) {
             try {
                 if (conn != null) conn.rollback();
@@ -150,17 +266,18 @@ public class Admin extends User{
                 System.err.println("Rollback failed: " + ex.getMessage());
             }
 
-            String errMesage = "An error occured while deleting the doctor:\n";//hata mesaji
-            if (e.getMessage().contains("foreign key constraint fails")) {//yabanci anahtar kisitlamasi hatasi
-                errMesage += "This doctor cannot be deleted because they have related records in other tables.";
+            String errMessage = "An error occurred while deleting the doctor:\n";
+            if (e.getMessage().contains("foreign key constraint fails")) {
+                errMessage += "This doctor cannot be deleted because they have related records in other tables.";
             } else {
-                errMesage += e.getMessage();
+                errMessage += e.getMessage();
             }
 
-            JOptionPane.showMessageDialog(null,errMesage,"Error",JOptionPane.ERROR_MESSAGE);
-            return false;
+            JOptionPane.showMessageDialog(null, errMessage, "Error", JOptionPane.ERROR_MESSAGE);
         } finally {
-            try {//kaynaklari kapat
+            try {
+                if (rs != null) rs.close();
+                if (checkDoctorPstmt != null) checkDoctorPstmt.close();
                 if (deleteDoctorPstmt != null) deleteDoctorPstmt.close();
                 if (deleteUserPstmt != null) deleteUserPstmt.close();
                 if (conn != null) {
@@ -174,32 +291,6 @@ public class Admin extends User{
             } catch (SQLException e) {
                 System.err.println("Error closing resources: " + e.getMessage());
             }
-        }
-    }
-
-    public void deleteDoctorInteractive() {
-        String input = JOptionPane.showInputDialog(null,"Enter Doctor ID to delete: ", "Delete doctor",JOptionPane.QUESTION_MESSAGE);
-
-        if (input == null || input.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(null,"Operation cancelled.","Info",JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        try {
-            int doctorId = Integer.parseInt(input);
-
-            int confirm = JOptionPane.showConfirmDialog(null,"Are you sure you want to delete doctor with ID " + doctorId + "?",
-                    "Confirm Deletion", JOptionPane.YES_NO_OPTION);
-
-            if (confirm == JOptionPane.YES_OPTION) {
-                boolean success = deleteDoctor(doctorId);
-                if (!success)
-                    JOptionPane.showMessageDialog(null,"Deletion failed for doctor ID " + doctorId, "Error",JOptionPane.ERROR_MESSAGE);
-                else
-                    JOptionPane.showMessageDialog(null,"Deletion cancelled.", "Error",JOptionPane.INFORMATION_MESSAGE);
-            }
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(null,"Invalid ID format: Please enter a number.","Error",JOptionPane.ERROR_MESSAGE);
         }
     }
 
